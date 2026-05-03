@@ -25,12 +25,13 @@ DNS_SERVERS = {
     "Google (ABD) - Kesinlikle Önerilmez (Telemetri)": ["8.8.8.8", "8.8.4.4"]
 }
 
-class SecureDNSSwitcherApp(ctk.CTk):
+class VYDNSChangerApp(ctk.CTk): # Sınıf adını da markana uygun güncelledik
     def __init__(self):
         super().__init__()
 
-        self.title("Secure-DNS Switcher | Zero-Telemetry")
-        self.geometry("600x580") # Test sonuçları için pencereyi biraz uzattık
+        # --- Temel Pencere Ayarları ---
+        self.title("VY DNS Changer | Zero-Telemetry") # 1. DEĞİŞİKLİK: Pencere/Görev Çubuğu Adı
+        self.geometry("600x580") 
         self.resizable(False, False)
         ctk.set_default_color_theme("green") 
         ctk.set_appearance_mode("dark")
@@ -45,7 +46,8 @@ class SecureDNSSwitcherApp(ctk.CTk):
         self.top_bar = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.top_bar.pack(fill="x", padx=10, pady=5)
         
-        self.title_label = ctk.CTkLabel(self.top_bar, text="Secure-DNS Switcher", font=ctk.CTkFont(size=20, weight="bold"))
+        # 2. DEĞİŞİKLİK: Arayüzdeki Büyük Başlık
+        self.title_label = ctk.CTkLabel(self.top_bar, text="VY DNS Changer", font=ctk.CTkFont(size=20, weight="bold"))
         self.title_label.pack(side="left", padx=10)
 
         self.appearance_switch = ctk.CTkSwitch(self.top_bar, text="Dark Mode", command=self.toggle_appearance_mode)
@@ -74,7 +76,7 @@ class SecureDNSSwitcherApp(ctk.CTk):
         self.ping_results_textbox = ctk.CTkTextbox(self.main_frame, width=400, height=100, state="disabled", text_color="lightgray")
         self.ping_results_textbox.pack(pady=5)
 
-        # --- Aksiyon Butonu (Aşama 3) ---
+        # --- Aksiyon Butonu ---
         self.action_button = ctk.CTkButton(self.main_frame, text="DNS Uygula ve Önbelleği Temizle (Flush)", command=self.apply_dns_and_flush)
         self.action_button.pack(pady=15)
 
@@ -104,7 +106,6 @@ class SecureDNSSwitcherApp(ctk.CTk):
             self.adapter_combobox.configure(values=["Hata: WMI Okunamadı"])
             self.adapter_combobox.set("Hata: WMI Okunamadı")
 
-    # ⚙️ Aşama 4 Motoru: Asenkron Ping Başlatıcı
     def start_ping_test(self):
         self.test_button.configure(text="Test Ediliyor... Lütfen Bekleyin", state="disabled")
         
@@ -113,10 +114,8 @@ class SecureDNSSwitcherApp(ctk.CTk):
         self.ping_results_textbox.insert("end", "🛡️ Gecikme testi başlatıldı (ICMP Ping)...\n\n")
         self.ping_results_textbox.configure(state="disabled")
         
-        # Arayüzün donmaması için testi arka planda (Daemon Thread) çalıştır
         threading.Thread(target=self.run_ping_tests, daemon=True).start()
 
-    # ⚙️ Aşama 4 Motoru: İşletim Sistemi Seviyesinde ICMP Sorgusu
     def run_ping_tests(self):
         results = {}
         CREATE_NO_WINDOW = 0x08000000
@@ -124,27 +123,23 @@ class SecureDNSSwitcherApp(ctk.CTk):
         for name, ips in DNS_SERVERS.items():
             primary_ip = ips[0]
             try:
-                # Windows Ping Komutu: -n 1 (1 paket gönder), -w 1000 (1000ms zaman aşımı)
                 output = subprocess.check_output(
                     ["ping", "-n", "1", "-w", "1000", primary_ip],
                     creationflags=CREATE_NO_WINDOW,
                     text=True,
-                    errors='ignore' # İşletim sistemi dil kodlaması hatalarını yoksay
+                    errors='ignore'
                 )
                 
-                # Hem Türkçe (süre=, zaman=) hem İngilizce (time=) işletim sistemleri için Regex
                 match = re.search(r'(?:time|s[uü]re|zaman)\s*[=<]\s*(\d+)\s*ms', output, re.IGNORECASE)
                 if match:
                     results[name] = int(match.group(1))
                 else:
-                    results[name] = float('inf') # Zaman aşımı
+                    results[name] = float('inf')
             except Exception:
                 results[name] = float('inf')
                 
-        # Test bittikten sonra sonuçları arayüze yazdırmak için ana thread'e sinyal gönder
         self.after(0, self.update_ping_ui, results)
 
-    # ⚙️ Aşama 4 Motoru: Sonuçları UI'a Yazdırma
     def update_ping_ui(self, results):
         self.ping_results_textbox.configure(state="normal")
         
@@ -152,7 +147,6 @@ class SecureDNSSwitcherApp(ctk.CTk):
              self.ping_results_textbox.insert("end", "Hata: Test tamamlanamadı.\n")
              return
              
-        # En düşük ms (milisaniye) değerini bul
         fastest_dns = min(results, key=results.get)
         
         for name, ms in results.items():
@@ -166,7 +160,6 @@ class SecureDNSSwitcherApp(ctk.CTk):
         self.ping_results_textbox.configure(state="disabled")
         self.test_button.configure(text="Gecikme Testini Tekrarla", state="normal")
         
-        # Kullanıcının işini kolaylaştırmak için ComboBox'ı otomatik olarak en hızlı DNS'e ayarla
         self.dns_combobox.set(fastest_dns)
 
     def apply_dns_and_flush(self):
@@ -192,5 +185,5 @@ class SecureDNSSwitcherApp(ctk.CTk):
         self.after(3000, lambda: self.action_button.configure(text="DNS Uygula ve Önbelleği Temizle (Flush)", fg_color=["#3B8ED0", "#1F6AA5"]))
 
 if __name__ == "__main__":
-    app = SecureDNSSwitcherApp()
+    app = VYDNSChangerApp() # Buradaki çağrıyı da sınıf adına göre güncelledik
     app.mainloop()
