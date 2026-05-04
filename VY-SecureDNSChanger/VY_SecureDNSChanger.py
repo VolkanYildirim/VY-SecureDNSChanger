@@ -29,7 +29,7 @@ class VYDNSChangerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("VY DNS Changer | Zero-Telemetry")
+        self.title("VY DNS Changer (Pro Edition)") # 📌 GÜNCELLENDİ
         self.geometry("600x620") 
         self.resizable(False, False)
         ctk.set_default_color_theme("green") 
@@ -45,14 +45,13 @@ class VYDNSChangerApp(ctk.CTk):
         self.top_bar = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.top_bar.pack(fill="x", padx=10, pady=5)
         
+        # 📌 GÜNCELLENDİ
         self.title_label = ctk.CTkLabel(self.top_bar, text="VY DNS Changer", font=ctk.CTkFont(size=20, weight="bold"))
         self.title_label.pack(side="left", padx=10)
 
-        # 1. Hakkında Butonu (En Sağa Yaslanır)
         self.about_button = ctk.CTkButton(self.top_bar, text="Hakkında", width=80, fg_color="#1F6AA5", hover_color="#144870", command=self.show_about_window)
         self.about_button.pack(side="right", padx=(5, 10))
 
-        # 2. Sürüm Geçmişi Butonu (Hakkında'nın Soluna Yaslanır)
         self.history_button = ctk.CTkButton(self.top_bar, text="Sürüm Geçmişi", width=110, fg_color="#3B8ED0", hover_color="#1F6AA5", command=self.show_history_window)
         self.history_button.pack(side="right", padx=5)
 
@@ -98,7 +97,6 @@ class VYDNSChangerApp(ctk.CTk):
 
         self.get_network_adapters()
 
-    # 🆕 YENİ: Sürüm Geçmişi Penceresi
     def show_history_window(self):
         history_window = ctk.CTkToplevel(self)
         history_window.title("Sürüm Geçmişi")
@@ -110,7 +108,6 @@ class VYDNSChangerApp(ctk.CTk):
 
         ctk.CTkLabel(history_window, text="Sürüm Geçmişi (Changelog)", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(15, 10))
 
-        # Kaydırılabilir metin kutusu (Gelecek sürümler için tasarlandı)
         history_textbox = ctk.CTkTextbox(history_window, width=460, height=260, state="normal", wrap="word")
         history_textbox.pack(pady=5, padx=20)
         
@@ -126,7 +123,7 @@ class VYDNSChangerApp(ctk.CTk):
             "• [Data] Jeopolitik olarak nötr, gizlilik odaklı DNS veritabanı (Quad9, Mullvad vb.) sisteme gömüldü.\n"
         )
         history_textbox.insert("1.0", changelog_text)
-        history_textbox.configure(state="disabled") # Kullanıcı değiştiremesin diye kilitliyoruz
+        history_textbox.configure(state="disabled")
 
     def show_about_window(self):
         about_window = ctk.CTkToplevel(self)
@@ -137,7 +134,8 @@ class VYDNSChangerApp(ctk.CTk):
         about_window.transient(self)
         about_window.grab_set()
 
-        ctk.CTkLabel(about_window, text="VY DNS Changer", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(20, 5))
+        # 📌 GÜNCELLENDİ
+        ctk.CTkLabel(about_window, text="VY DNS Changer (Pro Edition)", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(20, 5))
         ctk.CTkLabel(about_window, text="Version 1.0", text_color="gray").pack(pady=(0, 15))
 
         desc_text = ("Bu yazılım; dijital mahremiyet (Privacy-First) ilkeleri\n"
