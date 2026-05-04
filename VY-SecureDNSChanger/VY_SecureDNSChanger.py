@@ -48,9 +48,14 @@ class VYDNSChangerApp(ctk.CTk):
         self.title_label = ctk.CTkLabel(self.top_bar, text="VY DNS Changer", font=ctk.CTkFont(size=20, weight="bold"))
         self.title_label.pack(side="left", padx=10)
 
+        # Şalteri ve Hakkında butonunu sağa hizalıyoruz
         self.appearance_switch = ctk.CTkSwitch(self.top_bar, text="Dark Mode", command=self.toggle_appearance_mode)
         self.appearance_switch.pack(side="right", padx=10)
         self.appearance_switch.select()
+
+        # 🆕 YENİ: Hakkında Butonu
+        self.about_button = ctk.CTkButton(self.top_bar, text="Hakkında", width=80, fg_color="#1F6AA5", hover_color="#144870", command=self.show_about_window)
+        self.about_button.pack(side="right", padx=10)
 
         # --- Ağ Bağdaştırıcıları ---
         self.adapter_label = ctk.CTkLabel(self.main_frame, text="1. Ağ Bağdaştırıcısını Seçin:", font=ctk.CTkFont(weight="bold"))
@@ -74,7 +79,7 @@ class VYDNSChangerApp(ctk.CTk):
         self.ping_results_textbox = ctk.CTkTextbox(self.main_frame, width=400, height=100, state="disabled", text_color="lightgray")
         self.ping_results_textbox.pack(pady=5)
 
-        # --- Aşama 5: Aksiyon ve Sıfırlama Butonları ---
+        # --- Aksiyon ve Sıfırlama Butonları ---
         self.button_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.button_frame.pack(pady=15)
 
@@ -85,6 +90,29 @@ class VYDNSChangerApp(ctk.CTk):
         self.reset_button.pack(side="right", padx=10)
 
         self.get_network_adapters()
+
+    # 🆕 YENİ: Hakkında Penceresi (Modal) Fonksiyonu
+    def show_about_window(self):
+        about_window = ctk.CTkToplevel(self)
+        about_window.title("Hakkında")
+        about_window.geometry("450x260")
+        about_window.resizable(False, False)
+        
+        # Pencereyi Modal yap (Arkaya tıklamayı engeller)
+        about_window.transient(self)
+        about_window.grab_set()
+
+        ctk.CTkLabel(about_window, text="VY DNS Changer", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(20, 5))
+        ctk.CTkLabel(about_window, text="Version 1.0", text_color="gray").pack(pady=(0, 15))
+
+        desc_text = ("Bu yazılım; dijital mahremiyet (Privacy-First) ilkeleri\n"
+                     "gözetilerek, tamamen açık kaynaklı altyapılar kullanılarak\n"
+                     "geliştirilmiştir. Hiçbir kullanıcı verisi veya telemetri\n"
+                     "toplamaz ve dışarıya aktarmaz.")
+        ctk.CTkLabel(about_window, text=desc_text, justify="center").pack(pady=(10, 20))
+
+        footer_text = "🛡️ Developed by Volkan YILDIRIM - Proctives\nwww.volkanyildirim.com.tr"
+        ctk.CTkLabel(about_window, text=footer_text, justify="center").pack(pady=(0, 10))
 
     def toggle_appearance_mode(self):
         if self.appearance_switch.get() == 1:
@@ -99,13 +127,9 @@ class VYDNSChangerApp(ctk.CTk):
             w = wmi.WMI()
             network_configs = w.Win32_NetworkAdapterConfiguration(IPEnabled=True)
             adapter_list = [config.Description for config in network_configs]
-            
-            if not adapter_list:
-                adapter_list = ["Aktif ağ bağlantısı bulunamadı!"]
-            
+            if not adapter_list: adapter_list = ["Aktif ağ bağlantısı bulunamadı!"]
             self.adapter_combobox.configure(values=adapter_list)
             self.adapter_combobox.set(adapter_list[0]) 
-            
         except Exception:
             self.adapter_combobox.configure(values=["Hata: WMI Okunamadı"])
             self.adapter_combobox.set("Hata: WMI Okunamadı")
@@ -126,12 +150,9 @@ class VYDNSChangerApp(ctk.CTk):
             try:
                 output = subprocess.check_output(["ping", "-n", "1", "-w", "1000", primary_ip], creationflags=CREATE_NO_WINDOW, text=True, errors='ignore')
                 match = re.search(r'(?:time|s[uü]re|zaman)\s*[=<]\s*(\d+)\s*ms', output, re.IGNORECASE)
-                if match:
-                    results[name] = int(match.group(1))
-                else:
-                    results[name] = float('inf')
-            except Exception:
-                results[name] = float('inf')
+                if match: results[name] = int(match.group(1))
+                else: results[name] = float('inf')
+            except Exception: results[name] = float('inf')
         self.after(0, self.update_ping_ui, results)
 
     def update_ping_ui(self, results):
@@ -141,8 +162,7 @@ class VYDNSChangerApp(ctk.CTk):
              return
         fastest_dns = min(results, key=results.get)
         for name, ms in results.items():
-            if ms == float('inf'):
-                text = f"❌ {name.split(' ')[0]}: Zaman Aşımı\n"
+            if ms == float('inf'): text = f"❌ {name.split(' ')[0]}: Zaman Aşımı\n"
             else:
                 marker = "🚀 [EN HIZLI] " if name == fastest_dns else "✅ "
                 text = f"{marker}{name.split(' ')[0]}: {ms} ms\n"
@@ -158,7 +178,6 @@ class VYDNSChangerApp(ctk.CTk):
         primary_ip = DNS_SERVERS[dns_choice][0]
         secondary_ip = DNS_SERVERS[dns_choice][1]
         CREATE_NO_WINDOW = 0x08000000
-
         try:
             subprocess.run(["netsh", "interface", "ipv4", "set", "dnsservers", adapter, "static", primary_ip, "primary"], check=True, creationflags=CREATE_NO_WINDOW)
             subprocess.run(["netsh", "interface", "ipv4", "add", "dnsservers", adapter, secondary_ip, "index=2"], check=True, creationflags=CREATE_NO_WINDOW)
@@ -166,24 +185,18 @@ class VYDNSChangerApp(ctk.CTk):
             self.action_button.configure(text="İşlem Başarılı!", fg_color="green")
         except subprocess.CalledProcessError:
             self.action_button.configure(text="Hata: Başarısız", fg_color="red")
-        
         self.after(3000, lambda: self.action_button.configure(text="DNS Uygula (Flush)", fg_color=["#3B8ED0", "#1F6AA5"]))
 
-    # ⚙️ Aşama 5 Motoru: Otomatik DNS'e (DHCP) Geri Dönüş
     def reset_dns_to_dhcp(self):
         adapter = self.adapter_combobox.get()
         if "Hata" in adapter or "Aktif ağ" in adapter: return
         CREATE_NO_WINDOW = 0x08000000
-
         try:
-            # İşletim sistemine DNS ayarlarını statik (manuel) moddan çıkarıp otomatik moda (DHCP) almasını söyler
             subprocess.run(["netsh", "interface", "ipv4", "set", "dnsservers", adapter, "source=dhcp"], check=True, creationflags=CREATE_NO_WINDOW)
             subprocess.run(["ipconfig", "/flushdns"], check=True, creationflags=CREATE_NO_WINDOW)
-            
             self.reset_button.configure(text="Otomatik DNS Aktif!", fg_color="green")
         except subprocess.CalledProcessError:
             self.reset_button.configure(text="Hata: Sıfırlanamadı", fg_color="red")
-            
         self.after(3000, lambda: self.reset_button.configure(text="Varsayılana Dön (DHCP)", fg_color="#C62828"))
 
 if __name__ == "__main__":
