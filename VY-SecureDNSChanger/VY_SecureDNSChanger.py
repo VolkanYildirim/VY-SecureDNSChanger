@@ -30,7 +30,7 @@ class VYDNSChangerApp(ctk.CTk):
         super().__init__()
 
         self.title("VY DNS Changer | Zero-Telemetry")
-        self.geometry("600x620") # Alt bar eklendiği için yükseklik hafif artırıldı
+        self.geometry("600x620") 
         self.resizable(False, False)
         ctk.set_default_color_theme("green") 
         ctk.set_appearance_mode("dark")
@@ -48,9 +48,13 @@ class VYDNSChangerApp(ctk.CTk):
         self.title_label = ctk.CTkLabel(self.top_bar, text="VY DNS Changer", font=ctk.CTkFont(size=20, weight="bold"))
         self.title_label.pack(side="left", padx=10)
 
-        # Hakkında butonu tam olarak sağ üst köşede tek başına bırakıldı
+        # 1. Hakkında Butonu (En Sağa Yaslanır)
         self.about_button = ctk.CTkButton(self.top_bar, text="Hakkında", width=80, fg_color="#1F6AA5", hover_color="#144870", command=self.show_about_window)
-        self.about_button.pack(side="right", padx=10)
+        self.about_button.pack(side="right", padx=(5, 10))
+
+        # 2. Sürüm Geçmişi Butonu (Hakkında'nın Soluna Yaslanır)
+        self.history_button = ctk.CTkButton(self.top_bar, text="Sürüm Geçmişi", width=110, fg_color="#3B8ED0", hover_color="#1F6AA5", command=self.show_history_window)
+        self.history_button.pack(side="right", padx=5)
 
         # --- Ağ Bağdaştırıcıları ---
         self.adapter_label = ctk.CTkLabel(self.main_frame, text="1. Ağ Bağdaştırıcısını Seçin:", font=ctk.CTkFont(weight="bold"))
@@ -84,16 +88,45 @@ class VYDNSChangerApp(ctk.CTk):
         self.reset_button = ctk.CTkButton(self.button_frame, text="Varsayılana Dön (DHCP)", command=self.reset_dns_to_dhcp, fg_color="#C62828", hover_color="#B71C1C", width=190)
         self.reset_button.pack(side="right", padx=10)
 
-        # --- Alt Bar (Footer - YENİ) ---
+        # --- Alt Bar (Footer) ---
         self.footer_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.footer_frame.pack(fill="x", padx=10, pady=(10, 0))
 
-        # Şalter sağ alt köşeye yerleştirildi
         self.appearance_switch = ctk.CTkSwitch(self.footer_frame, text="Dark Mode", command=self.toggle_appearance_mode)
         self.appearance_switch.pack(side="right", padx=10)
         self.appearance_switch.select()
 
         self.get_network_adapters()
+
+    # 🆕 YENİ: Sürüm Geçmişi Penceresi
+    def show_history_window(self):
+        history_window = ctk.CTkToplevel(self)
+        history_window.title("Sürüm Geçmişi")
+        history_window.geometry("500x350")
+        history_window.resizable(False, False)
+        
+        history_window.transient(self)
+        history_window.grab_set()
+
+        ctk.CTkLabel(history_window, text="Sürüm Geçmişi (Changelog)", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(15, 10))
+
+        # Kaydırılabilir metin kutusu (Gelecek sürümler için tasarlandı)
+        history_textbox = ctk.CTkTextbox(history_window, width=460, height=260, state="normal", wrap="word")
+        history_textbox.pack(pady=5, padx=20)
+        
+        changelog_text = (
+            "🚀 v1.0.0 (İlk Sürüm)\n"
+            "--------------------------------------------------\n"
+            "• [UI] CustomTkinter ile modern, Dark/Light Mode destekli arayüz tasarlandı.\n"
+            "• [Core] WMI (İşletim sistemi çekirdeği) üzerinden aktif ağ bağdaştırıcılarını bulma modülü eklendi.\n"
+            "• [Core] UAC yönergelerine uygun, netsh tabanlı güvenli DNS değiştirme motoru yazıldı.\n"
+            "• [Network] Asenkron (Threading) mimari ile çalışan ICMP Ping (Gecikme) test aracı entegre edildi.\n"
+            "• [Network] Olası ağ kopmalarına karşı otomatik IP/DNS (DHCP) sıfırlama 'fail-safe' sistemi eklendi.\n"
+            "• [Security] Sıfır telemetri (Zero-Telemetry) ve veri sızıntısını önleyen izole yapı (Zero-Leak) sağlandı.\n"
+            "• [Data] Jeopolitik olarak nötr, gizlilik odaklı DNS veritabanı (Quad9, Mullvad vb.) sisteme gömüldü.\n"
+        )
+        history_textbox.insert("1.0", changelog_text)
+        history_textbox.configure(state="disabled") # Kullanıcı değiştiremesin diye kilitliyoruz
 
     def show_about_window(self):
         about_window = ctk.CTkToplevel(self)
