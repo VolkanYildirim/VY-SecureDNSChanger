@@ -30,7 +30,7 @@ class VYDNSChangerApp(ctk.CTk):
         super().__init__()
 
         self.title("VY DNS Changer | Zero-Telemetry")
-        self.geometry("600x580") 
+        self.geometry("600x620") # Alt bar eklendiği için yükseklik hafif artırıldı
         self.resizable(False, False)
         ctk.set_default_color_theme("green") 
         ctk.set_appearance_mode("dark")
@@ -41,25 +41,20 @@ class VYDNSChangerApp(ctk.CTk):
         self.main_frame = ctk.CTkFrame(self, corner_radius=10)
         self.main_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        # --- Üst Bar ---
+        # --- Üst Bar (Top Bar) ---
         self.top_bar = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.top_bar.pack(fill="x", padx=10, pady=5)
         
         self.title_label = ctk.CTkLabel(self.top_bar, text="VY DNS Changer", font=ctk.CTkFont(size=20, weight="bold"))
         self.title_label.pack(side="left", padx=10)
 
-        # Şalteri ve Hakkında butonunu sağa hizalıyoruz
-        self.appearance_switch = ctk.CTkSwitch(self.top_bar, text="Dark Mode", command=self.toggle_appearance_mode)
-        self.appearance_switch.pack(side="right", padx=10)
-        self.appearance_switch.select()
-
-        # 🆕 YENİ: Hakkında Butonu
+        # Hakkında butonu tam olarak sağ üst köşede tek başına bırakıldı
         self.about_button = ctk.CTkButton(self.top_bar, text="Hakkında", width=80, fg_color="#1F6AA5", hover_color="#144870", command=self.show_about_window)
         self.about_button.pack(side="right", padx=10)
 
         # --- Ağ Bağdaştırıcıları ---
         self.adapter_label = ctk.CTkLabel(self.main_frame, text="1. Ağ Bağdaştırıcısını Seçin:", font=ctk.CTkFont(weight="bold"))
-        self.adapter_label.pack(pady=(5, 0))
+        self.adapter_label.pack(pady=(10, 0))
 
         self.adapter_combobox = ctk.CTkComboBox(self.main_frame, values=["Yükleniyor..."], width=400)
         self.adapter_combobox.pack(pady=(5, 10))
@@ -89,16 +84,23 @@ class VYDNSChangerApp(ctk.CTk):
         self.reset_button = ctk.CTkButton(self.button_frame, text="Varsayılana Dön (DHCP)", command=self.reset_dns_to_dhcp, fg_color="#C62828", hover_color="#B71C1C", width=190)
         self.reset_button.pack(side="right", padx=10)
 
+        # --- Alt Bar (Footer - YENİ) ---
+        self.footer_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.footer_frame.pack(fill="x", padx=10, pady=(10, 0))
+
+        # Şalter sağ alt köşeye yerleştirildi
+        self.appearance_switch = ctk.CTkSwitch(self.footer_frame, text="Dark Mode", command=self.toggle_appearance_mode)
+        self.appearance_switch.pack(side="right", padx=10)
+        self.appearance_switch.select()
+
         self.get_network_adapters()
 
-    # 🆕 YENİ: Hakkında Penceresi (Modal) Fonksiyonu
     def show_about_window(self):
         about_window = ctk.CTkToplevel(self)
         about_window.title("Hakkında")
         about_window.geometry("450x260")
         about_window.resizable(False, False)
         
-        # Pencereyi Modal yap (Arkaya tıklamayı engeller)
         about_window.transient(self)
         about_window.grab_set()
 
