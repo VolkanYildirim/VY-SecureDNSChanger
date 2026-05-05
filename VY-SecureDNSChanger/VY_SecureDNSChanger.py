@@ -132,7 +132,7 @@ class VYDNSChangerApp(ctk.CTk):
             "• [Network] Asenkron (Threading) mimari ile çalışan ICMP Ping (Gecikme) test aracı entegre edildi.\n"
             "• [Network] Olası ağ kopmalarına karşı otomatik IP/DNS (DHCP) sıfırlama 'fail-safe' sistemi eklendi.\n"
             "• [Security] Sıfır telemetri (Zero-Telemetry) ve veri sızıntısını önleyen izole yapı (Zero-Leak) sağlandı.\n"
-            "• [Data] Jeopolitik olarak nötr, gizlilik odaklı DNS veritabanı (Quad9, Mullvad vb.) sisteme gömüldü.\n"
+            "• [Data] DNS listesi nötr, güvenli veya kritiklik seviyelerine göre listelendi. \n"
         )
         history_textbox.insert("1.0", changelog_text)
         history_textbox.configure(state="disabled")
