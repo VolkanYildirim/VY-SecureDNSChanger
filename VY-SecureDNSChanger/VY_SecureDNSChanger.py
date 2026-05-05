@@ -17,13 +17,25 @@ if not is_admin():
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
     sys.exit()
 
-# 🛡️ Jeopolitik Filtreli DNS Veritabanı
+# 🛡️ Jeopolitik Filtreli ve Kategorize Edilmiş DNS Veritabanı
 DNS_SERVERS = {
+    # ✅ Nötr / Dost / Gizlilik Odaklı (Önerilenler)
     "Quad9 (İsviçre) - Önerilen / Malware Filtreli": ["9.9.9.9", "149.112.112.112"],
     "Mullvad (İsveç) - Gizlilik Odaklı / Sansürsüz": ["194.242.2.4", "194.242.2.5"],
-    "Cloudflare (ABD) - Hızlı / Riskli (Veri İşler)": ["1.1.1.1", "1.0.0.1"],
-    "Google (ABD) - Kesinlikle Önerilmez (Telemetri)": ["8.8.8.8", "8.8.4.4"]
+    "DNS.WATCH (Almanya) - Sansürsüz / Kayıtsız": ["84.200.69.80", "84.200.70.40"],
+    "DNS4EU (Avrupa Birliği) - Bağımsız / Güvenli": ["185.228.168.10", "185.228.169.11"],
+
+    # ⚠️ Politik Riskli Ama Sektör Standardı (ABD Menşeli)
+    "NextDNS (ABD) - Gizlilik Odaklı (Kısmi Kayıt)": ["45.90.28.188", "45.90.30.188"],
+    "Cloudflare (ABD) - Çok Hızlı / Veri İşler": ["1.1.1.1", "1.0.0.1"],
+    "OpenDNS (ABD) - Kurumsal / İzleme Riski (Cisco)": ["208.67.222.222", "208.67.220.220"],
+
+    # ❌ Kritik Riskli (Telemetri, Menşei ve Loglama Uyarısı)
+    "Google (ABD) - Kesinlikle Önerilmez (Telemetri)": ["8.8.8.8", "8.8.4.4"],
+    "Yandex (Rusya) - Politik Risk / Veri Toplama": ["77.88.8.8", "77.88.8.1"],
+    "AdGuard (Rum Kesimi/Rusya) - Menşei Riskli": ["94.140.14.14", "94.140.15.15"]
 }
+
 
 class VYDNSChangerApp(ctk.CTk):
     def __init__(self):
