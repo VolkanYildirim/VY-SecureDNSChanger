@@ -172,7 +172,7 @@ class VYDNSChangerApp(ctk.CTk):
             w = wmi.WMI()
             network_configs = w.Win32_NetworkAdapterConfiguration(IPEnabled=True)
             adapter_list = [config.Description for config in network_configs]
-            if not adapter_list: adapter_list = ["Aktif ağ bağlantısı bulunamadı!"]
+            if not adapter_list: adapter_list = ["Aktif ağ bağlantısı bulunamadı!.."]
             self.adapter_combobox.configure(values=adapter_list)
             self.adapter_combobox.set(adapter_list[0]) 
         except Exception:
@@ -180,7 +180,7 @@ class VYDNSChangerApp(ctk.CTk):
             self.adapter_combobox.set("Hata: WMI Okunamadı")
 
     def start_ping_test(self):
-        self.test_button.configure(text="Test Ediliyor... Lütfen Bekleyin", state="disabled")
+        self.test_button.configure(text="Test Ediliyor, Lütfen Bekleyin...", state="disabled")
         self.ping_results_textbox.configure(state="normal")
         self.ping_results_textbox.delete("1.0", "end")
         self.ping_results_textbox.insert("end", "🛡️ Gecikme testi başlatıldı (ICMP Ping)...\n\n")
@@ -203,7 +203,7 @@ class VYDNSChangerApp(ctk.CTk):
     def update_ping_ui(self, results):
         self.ping_results_textbox.configure(state="normal")
         if not results:
-             self.ping_results_textbox.insert("end", "Hata: Test tamamlanamadı.\n")
+             self.ping_results_textbox.insert("end", "Hata: Test tamamlanamadı!...\n")
              return
         fastest_dns = min(results, key=results.get)
         for name, ms in results.items():
@@ -229,7 +229,7 @@ class VYDNSChangerApp(ctk.CTk):
             subprocess.run(["ipconfig", "/flushdns"], check=True, creationflags=CREATE_NO_WINDOW)
             self.action_button.configure(text="İşlem Başarılı!", fg_color="green")
         except subprocess.CalledProcessError:
-            self.action_button.configure(text="Hata: Başarısız", fg_color="red")
+            self.action_button.configure(text="Hata: Başarısız!..", fg_color="red")
         self.after(3000, lambda: self.action_button.configure(text="DNS Uygula (Flush)", fg_color=["#3B8ED0", "#1F6AA5"]))
 
     def reset_dns_to_dhcp(self):
@@ -241,7 +241,7 @@ class VYDNSChangerApp(ctk.CTk):
             subprocess.run(["ipconfig", "/flushdns"], check=True, creationflags=CREATE_NO_WINDOW)
             self.reset_button.configure(text="Otomatik DNS Aktif!", fg_color="green")
         except subprocess.CalledProcessError:
-            self.reset_button.configure(text="Hata: Sıfırlanamadı", fg_color="red")
+            self.reset_button.configure(text="Hata: Sıfırlanamadı!...", fg_color="red")
         self.after(3000, lambda: self.reset_button.configure(text="Varsayılana Dön (DHCP)", fg_color="#C62828"))
 
 if __name__ == "__main__":
