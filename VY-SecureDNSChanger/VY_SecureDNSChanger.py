@@ -83,7 +83,7 @@ class VYDNSChangerApp(ctk.CTk):
         self.dns_combobox.set(list(DNS_SERVERS.keys())[0])
 
         # --- Gecikme (Ping) Testi ---
-        self.test_button = ctk.CTkButton(self.main_frame, text="En Hızlı DNS'i Test Et (Ping)", command=self.start_ping_test, fg_color="#E5A50A", hover_color="#B58208")
+        self.test_button = ctk.CTkButton(self.main_frame, text="En Hızlı DNS'i Test Et (Ping)", command=self.start_ping_test, fg_color="#E5A50A", hover_color="#B58208", text_color="black", text_color_disabled="#404040")
         self.test_button.pack(pady=10)
 
         self.ping_results_textbox = ctk.CTkTextbox(self.main_frame, width=400, height=100, state="disabled", text_color="lightgray")
@@ -176,8 +176,8 @@ class VYDNSChangerApp(ctk.CTk):
             self.adapter_combobox.configure(values=adapter_list)
             self.adapter_combobox.set(adapter_list[0]) 
         except Exception:
-            self.adapter_combobox.configure(values=["Hata: WMI Okunamadı"])
-            self.adapter_combobox.set("Hata: WMI Okunamadı")
+            self.adapter_combobox.configure(values=["Hata: WMI Okunamadı!..."])
+            self.adapter_combobox.set("Hata: WMI Okunamadı!...")
 
     def start_ping_test(self):
         self.test_button.configure(text="Test Ediliyor, Lütfen Bekleyin...", state="disabled")
