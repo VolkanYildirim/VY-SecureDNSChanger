@@ -5,6 +5,7 @@ import ctypes
 import sys
 import threading
 import re
+from datetime import datetime # 🆕 YENİ: Log saatlerini almak için eklendi
 
 # 🛡️ UAC Yönetici İzni Kontrolü
 def is_admin():
@@ -31,7 +32,7 @@ class VYDNSChangerApp(ctk.CTk):
         super().__init__()
 
         self.title("VY DNS Changer (Pro Edition) | Zero-Telemetry")
-        self.geometry("600x700") # Panel için dikey alan genişletildi
+        self.geometry("600x880") # 📌 Terminal kutusu için dikey alan genişletildi
         self.resizable(False, False)
         ctk.set_default_color_theme("green") 
         ctk.set_appearance_mode("dark")
@@ -85,9 +86,9 @@ class VYDNSChangerApp(ctk.CTk):
         self.reset_button = ctk.CTkButton(self.button_frame, text="Varsayılana Dön (DHCP)", command=self.reset_dns_to_dhcp, fg_color="#C62828", hover_color="#B71C1C", width=190)
         self.reset_button.pack(side="right", padx=10)
 
-        # --- 📊 Aktif Ağ Durumu Paneli (YENİ) ---
+        # --- 📊 Aktif Ağ Durumu Paneli ---
         self.status_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color=["#E0E0E0", "#2B2B2B"])
-        self.status_frame.pack(fill="x", padx=40, pady=15)
+        self.status_frame.pack(fill="x", padx=40, pady=(15, 5))
         
         self.status_title = ctk.CTkLabel(self.status_frame, text="📡 Aktif Durum Paneli", font=ctk.CTkFont(size=13, weight="bold"))
         self.status_title.pack(pady=(5, 2))
@@ -98,6 +99,20 @@ class VYDNSChangerApp(ctk.CTk):
         self.dns_status_label = ctk.CTkLabel(self.status_frame, text="Aktif DNS: Tespit Ediliyor...", font=ctk.CTkFont(size=12))
         self.dns_status_label.pack(pady=(0, 5))
 
+        # --- 🖥️ Canlı Denetim Günlüğü (Terminal) (YENİ) ---
+        self.console_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.console_frame.pack(fill="x", padx=40, pady=(10, 5))
+        
+        self.console_label = ctk.CTkLabel(self.console_frame, text="Terminal / Sistem Kayıtları", font=ctk.CTkFont(size=12, weight="bold"))
+        self.console_label.pack(anchor="w")
+
+        # Terminal görünümü için Consolas fontu ve yeşil/siyah renk paleti
+        self.console_textbox = ctk.CTkTextbox(self.console_frame, height=120, state="disabled", 
+                                              fg_color=["#FFFFFF", "#0C0C0C"], 
+                                              text_color=["black", "#00FF00"], 
+                                              font=ctk.CTkFont(family="Consolas", size=11))
+        self.console_textbox.pack(fill="x", pady=(2, 0))
+
         # --- Alt Bar ---
         self.footer_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.footer_frame.pack(fill="x", padx=10, pady=(5, 0))
@@ -106,10 +121,22 @@ class VYDNSChangerApp(ctk.CTk):
         self.appearance_switch.pack(side="right", padx=10)
         self.appearance_switch.select()
 
+        # Açılış logu ve WMI taramasını başlat
+        self.log_message("VY DNS Changer Pro başlatıldı. Sistem hazır.")
         self.get_network_adapters()
 
+    # ⚙️ YENİ: Dinamik Loglama Fonksiyonu
+    def log_message(self, message):
+        """Mesajları saat damgası (timestamp) ile terminale yazar ve otomatik aşağı kaydırır."""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        log_text = f"[{timestamp}] {message}\n"
+        
+        self.console_textbox.configure(state="normal")
+        self.console_textbox.insert("end", log_text)
+        self.console_textbox.see("end") # Otomatik olarak en son satıra kaydır
+        self.console_textbox.configure(state="disabled")
+
     def refresh_current_status(self):
-        """Seçili adaptörün anlık IP ve DNS bilgilerini çeker ve paneli günceller."""
         selected_desc = self.adapter_combobox.get()
         try:
             w = wmi.WMI()
@@ -128,49 +155,68 @@ class VYDNSChangerApp(ctk.CTk):
 
     def get_network_adapters(self):
         try:
+            self.log_message("Ağ bağdaştırıcıları için WMI taraması başlatıldı...")
             w = wmi.WMI()
             network_configs = w.Win32_NetworkAdapterConfiguration(IPEnabled=True)
             adapter_list = [config.Description for config in network_configs]
-            if not adapter_list: adapter_list = ["Aktif ağ bağlantısı bulunamadı!"]
+            if not adapter_list: 
+                adapter_list = ["Aktif ağ bağlantısı bulunamadı!"]
+                self.log_message("UYARI: Aktif bir internet bağlantısı tespit edilemedi.")
+            else:
+                self.log_message(f"Başarılı: {len(adapter_list)} aktif adaptör bulundu.")
+                
             self.adapter_combobox.configure(values=adapter_list)
             self.adapter_combobox.set(adapter_list[0])
-            self.refresh_current_status() # İlk açılışta veriyi çek
+            self.refresh_current_status()
         except Exception:
             self.adapter_combobox.configure(values=["Hata: WMI Okunamadı"])
+            self.log_message("KRİTİK HATA: WMI servisi okunamadı!")
 
-    # (Diğer fonksiyonlar: show_history_window, show_about_window, toggle_appearance_mode, start_ping_test, run_ping_tests, update_ping_ui aynı kalacak)
-    
     def apply_dns_and_flush(self):
         adapter = self.adapter_combobox.get()
         dns_choice = self.dns_combobox.get()
         if "Hata" in adapter or "Aktif ağ" in adapter: return
+        
         primary_ip = DNS_SERVERS[dns_choice][0]
         secondary_ip = DNS_SERVERS[dns_choice][1]
         CREATE_NO_WINDOW = 0x08000000
+        
+        self.log_message(f"İşlem: '{dns_choice}' seçili adaptöre uygulanıyor...")
+
         try:
             subprocess.run(["netsh", "interface", "ipv4", "set", "dnsservers", adapter, "static", primary_ip, "primary"], check=True, creationflags=CREATE_NO_WINDOW)
             subprocess.run(["netsh", "interface", "ipv4", "add", "dnsservers", adapter, secondary_ip, "index=2"], check=True, creationflags=CREATE_NO_WINDOW)
+            
+            self.log_message("Bilgi: Windows DNS Önbelleği (Flush DNS) temizleniyor...")
             subprocess.run(["ipconfig", "/flushdns"], check=True, creationflags=CREATE_NO_WINDOW)
+            
             self.action_button.configure(text="İşlem Başarılı!", fg_color="green")
-            self.refresh_current_status() # Değişiklik sonrası paneli güncelle
+            self.log_message(f"BAŞARILI: Ağ kuralları uygulandı ve önbellek temizlendi.")
+            self.refresh_current_status()
         except subprocess.CalledProcessError:
             self.action_button.configure(text="Hata: Başarısız", fg_color="red")
+            self.log_message("HATA: Komut çalıştırılamadı. UAC izinlerini kontrol edin.")
+            
         self.after(3000, lambda: self.action_button.configure(text="DNS Uygula (Flush)", fg_color=["#3B8ED0", "#1F6AA5"]))
 
     def reset_dns_to_dhcp(self):
         adapter = self.adapter_combobox.get()
         if "Hata" in adapter or "Aktif ağ" in adapter: return
         CREATE_NO_WINDOW = 0x08000000
+        
+        self.log_message("İşlem: Ağ kartı Otomatik (DHCP) DNS moduna geçiriliyor...")
         try:
             subprocess.run(["netsh", "interface", "ipv4", "set", "dnsservers", adapter, "source=dhcp"], check=True, creationflags=CREATE_NO_WINDOW)
             subprocess.run(["ipconfig", "/flushdns"], check=True, creationflags=CREATE_NO_WINDOW)
             self.reset_button.configure(text="Otomatik DNS Aktif!", fg_color="green")
-            self.refresh_current_status() # Değişiklik sonrası paneli güncelle
+            self.log_message("BAŞARILI: DNS ayarları statikten DHCP'ye döndürüldü.")
+            self.refresh_current_status()
         except subprocess.CalledProcessError:
             self.reset_button.configure(text="Hata: Sıfırlanamadı", fg_color="red")
+            self.log_message("HATA: DHCP sıfırlama işlemi başarısız oldu.")
+            
         self.after(3000, lambda: self.reset_button.configure(text="Varsayılana Dön (DHCP)", fg_color="#C62828"))
 
-    # Eksik modal fonksiyonlarını buraya ekleyin (önceki koddan kopyalayabilirsiniz)
     def show_history_window(self):
         history_window = ctk.CTkToplevel(self)
         history_window.title("Sürüm Geçmişi")
@@ -180,7 +226,19 @@ class VYDNSChangerApp(ctk.CTk):
         ctk.CTkLabel(history_window, text="Sürüm Geçmişi (Changelog)", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(15, 10))
         history_textbox = ctk.CTkTextbox(history_window, width=460, height=260, state="normal", wrap="word")
         history_textbox.pack(pady=5, padx=20)
-        history_textbox.insert("1.0", "🚀 v1.1.0\n• 📊 Aktif Durum Paneli eklendi.\n• 🎨 UI iyileştirmeleri yapıldı.")
+        
+        # 📌 Sürüm Geçmişi Güncellendi
+        changelog = (
+            "🚀 v1.2.0\n"
+            "• [Audit] 'Canlı Denetim Günlüğü' terminal paneli eklendi.\n"
+            "• [Log] İşlem geçmişi için dinamik Timestamp motoru yazıldı.\n\n"
+            "🚀 v1.1.0\n"
+            "• [Monitor] WMI tabanlı Aktif Ağ Durumu Paneli (IP/DNS izleme) eklendi.\n"
+            "• [UI] Arayüz elemanları ve ölçeklendirme güncellendi.\n\n"
+            "🚀 v1.0.0 (İlk Sürüm)\n"
+            "• Güvenli DNS değiştirme, Asenkron Ping ve DHCP Reset özellikleri eklendi."
+        )
+        history_textbox.insert("1.0", changelog)
         history_textbox.configure(state="disabled")
 
     def show_about_window(self):
@@ -190,7 +248,14 @@ class VYDNSChangerApp(ctk.CTk):
         about_window.transient(self)
         about_window.grab_set()
         ctk.CTkLabel(about_window, text="VY DNS Changer (Pro Edition)", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(20, 5))
-        ctk.CTkLabel(about_window, text="Developed by Volkan YILDIRIM", font=ctk.CTkFont(size=12)).pack()
+        ctk.CTkLabel(about_window, text="Version 1.2.0", text_color="gray").pack(pady=(0, 15))
+        desc_text = ("Bu yazılım; dijital mahremiyet (Privacy-First) ilkeleri\n"
+                     "gözetilerek, tamamen açık kaynaklı altyapılar kullanılarak\n"
+                     "geliştirilmiştir. Hiçbir kullanıcı verisi veya telemetri\n"
+                     "toplamaz ve dışarıya aktarmaz.")
+        ctk.CTkLabel(about_window, text=desc_text, justify="center").pack(pady=(10, 20))
+        footer_text = "🛡️ Developed by Volkan YILDIRIM - Proctives\nwww.volkanyildirim.com.tr"
+        ctk.CTkLabel(about_window, text=footer_text, justify="center").pack(pady=(0, 10))
 
     def toggle_appearance_mode(self):
         if self.appearance_switch.get() == 1: ctk.set_appearance_mode("dark")
@@ -198,11 +263,44 @@ class VYDNSChangerApp(ctk.CTk):
 
     def start_ping_test(self):
         self.test_button.configure(text="Test Ediliyor...", state="disabled")
+        self.log_message("İşlem: ICMP Gecikme Testi asenkron olarak başlatılıyor...")
         threading.Thread(target=self.run_ping_tests, daemon=True).start()
 
     def run_ping_tests(self):
-        # Önceki ping mantığı...
-        self.after(0, lambda: self.test_button.configure(text="En Hızlı DNS'i Test Et (Ping)", state="normal"))
+        results = {}
+        CREATE_NO_WINDOW = 0x08000000
+        for name, ips in DNS_SERVERS.items():
+            primary_ip = ips[0]
+            try:
+                output = subprocess.check_output(["ping", "-n", "1", "-w", "1000", primary_ip], creationflags=CREATE_NO_WINDOW, text=True, errors='ignore')
+                match = re.search(r'(?:time|s[uü]re|zaman)\s*[=<]\s*(\d+)\s*ms', output, re.IGNORECASE)
+                if match: results[name] = int(match.group(1))
+                else: results[name] = float('inf')
+            except Exception: results[name] = float('inf')
+        self.after(0, self.update_ping_ui, results)
+
+    def update_ping_ui(self, results):
+        self.ping_results_textbox.configure(state="normal")
+        self.ping_results_textbox.delete("1.0", "end")
+        if not results:
+             self.ping_results_textbox.insert("end", "Hata: Test tamamlanamadı.\n")
+             self.log_message("HATA: Gecikme testi tamamlanamadı.")
+             self.test_button.configure(text="Gecikme Testini Tekrarla", state="normal")
+             return
+             
+        fastest_dns = min(results, key=results.get)
+        self.log_message(f"BAŞARILI: Ping testi bitti. En iyi değer: {fastest_dns}")
+        
+        for name, ms in results.items():
+            if ms == float('inf'): text = f"❌ {name.split(' ')[0]}: Zaman Aşımı\n"
+            else:
+                marker = "🚀 [EN HIZLI] " if name == fastest_dns else "✅ "
+                text = f"{marker}{name.split(' ')[0]}: {ms} ms\n"
+            self.ping_results_textbox.insert("end", text)
+            
+        self.ping_results_textbox.configure(state="disabled")
+        self.test_button.configure(text="Gecikme Testini Tekrarla", state="normal")
+        self.dns_combobox.set(fastest_dns)
 
 if __name__ == "__main__":
     app = VYDNSChangerApp()
