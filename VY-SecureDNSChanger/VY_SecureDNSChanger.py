@@ -283,8 +283,8 @@ class VYDNSChangerApp(ctk.CTk):
         self.ping_results_textbox.configure(state="normal")
         self.ping_results_textbox.delete("1.0", "end")
         if not results:
-             self.ping_results_textbox.insert("end", "Hata: Test tamamlanamadı.\n")
-             self.log_message("HATA: Gecikme testi tamamlanamadı.")
+             self.ping_results_textbox.insert("end", "Hata: Test tamamlanamadı!...\n")
+             self.log_message("HATA: Gecikme testi tamamlanamadı!...")
              self.test_button.configure(text="Gecikme Testini Tekrarla", state="normal")
              return
              
