@@ -19,11 +19,11 @@ if not is_admin():
     sys.exit()
 
 DNS_SERVERS = {
-    "Quad9 (İsviçre) - Önerilen / Malware Filtreli": ["9.9.9.9", "149.112.112.112"],
-    "Mullvad (İsveç) - Gizlilik Odaklı / Sansürsüz": ["194.242.2.4", "194.242.2.5"],
-    "DNS.WATCH (Almanya) - Sansürsüz / Kayıtsız": ["84.200.69.80", "84.200.70.40"],
-    "DNS4EU (Avrupa Birliği) - Bağımsız / Güvenli": ["185.228.168.10", "185.228.169.11"],
-    "Cloudflare (ABD) - Hızlı / Riskli (Veri İşler)": ["1.1.1.1", "1.0.0.1"],
+    "Quad9 (İsviçre) - Önerilen (Malware Filtreli)": ["9.9.9.9", "149.112.112.112"],
+    "Mullvad (İsveç) - Gizlilik Odaklı (Sansürsüz)": ["194.242.2.4", "194.242.2.5"],
+    "DNS.WATCH (Almanya) - Sansürsüz (Kayıtsız)": ["84.200.69.80", "84.200.70.40"],
+    "DNS4EU (Avrupa Birliği) - Bağımsız (Güvenli)": ["185.228.168.10", "185.228.169.11"],
+    "Cloudflare (ABD) - Hızlı (Veri İşler)": ["1.1.1.1", "1.0.0.1"],
     "Google (ABD) - Kesinlikle Önerilmez (Telemetri)": ["8.8.8.8", "8.8.4.4"]
 }
 
