@@ -36,7 +36,7 @@ DNS_SERVERS = {
     "Google (ABD) - Kesinlikle Önerilmez (Telemetri)": ["8.8.8.8", "8.8.4.4"],
     "Yandex (Rusya) - Politik Risk (Veri Toplama)": ["77.88.8.8", "77.88.8.1"]
 }
-}
+
 
 class VYDNSChangerApp(ctk.CTk):
     def __init__(self):
