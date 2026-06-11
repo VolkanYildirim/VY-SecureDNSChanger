@@ -18,13 +18,24 @@ if not is_admin():
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
     sys.exit()
 
+# 🛡️ Jeopolitik Filtreli ve Genişletilmiş DNS Veritabanı
 DNS_SERVERS = {
+    # ✅ Nötr / Dost / Gizlilik Odaklı (Önerilenler)
     "Quad9 (İsviçre) - Önerilen (Malware Filtreli)": ["9.9.9.9", "149.112.112.112"],
     "Mullvad (İsveç) - Gizlilik Odaklı (Sansürsüz)": ["194.242.2.4", "194.242.2.5"],
     "DNS.WATCH (Almanya) - Sansürsüz (Kayıtsız)": ["84.200.69.80", "84.200.70.40"],
     "DNS4EU (Avrupa Birliği) - Bağımsız (Güvenli)": ["185.228.168.10", "185.228.169.11"],
-    "Cloudflare (ABD) - Hızlı (Veri İşler)": ["1.1.1.1", "1.0.0.1"],
-    "Google (ABD) - Kesinlikle Önerilmez (Telemetri)": ["8.8.8.8", "8.8.4.4"]
+    "LibreDNS (Almanya) - Açık Kaynak (Sıfır Günlük)": ["116.202.176.26", "46.38.252.138"],
+    "UncensoredDNS (Danimarka) - Bağımsız (Kâr Amacı Gütmeyen)": ["91.239.100.100", "89.233.43.71"],
+    "OpenNIC (Avrupa Düğümü) - Merkeziyetsiz (Sansür Karşıtı)": ["193.183.98.154", "5.135.183.146"],
+
+    # ⚠️ Politik Riskli Ama Sektör Standardı (ABD Menşeli)
+    "Cloudflare (ABD) - Hızlı (Riskli, Veri İşler)": ["1.1.1.1", "1.0.0.1"],
+    
+    # ❌ Kritik Riskli (Telemetri, Menşei ve Loglama Uyarısı)
+    "Google (ABD) - Kesinlikle Önerilmez (Telemetri)": ["8.8.8.8", "8.8.4.4"],
+    "Yandex (Rusya) - Politik Risk (Veri Toplama)": ["77.88.8.8", "77.88.8.1"]
+}
 }
 
 class VYDNSChangerApp(ctk.CTk):
